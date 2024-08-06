@@ -57,7 +57,7 @@ func NewOtcProvider(_ context.Context, _ string, credentialsData map[string]stri
 	}
 
 	dns, err := openstack.NewDNSV2(client, golangsdk.EndpointOpts{
-		Region: "eu-de",
+		Region: credentialsData[CredentialKeyRegion],
 	})
 
 	if err != nil {
