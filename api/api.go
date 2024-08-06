@@ -41,8 +41,9 @@ type Provider interface {
 type ProviderType string
 
 const (
-	CloudflareProvider     ProviderType = "cloudflare"
-	GoogleCloudDNSProvider ProviderType = "googleclouddns"
+	CloudflareProvider       ProviderType = "cloudflare"
+	GoogleCloudDNSProvider   ProviderType = "googleclouddns"
+	OpenTelekomCloudProvider ProviderType = "otc"
 )
 
 // Record represents a DNS record in a zone.
