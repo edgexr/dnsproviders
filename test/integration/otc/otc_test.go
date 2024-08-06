@@ -3,7 +3,9 @@ package otc
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"testing"
@@ -27,6 +29,11 @@ var (
 )
 
 func TestMain(m *testing.M) {
+	if _, err := os.Stat(credentialFile); errors.Is(err, os.ErrNotExist) {
+		log.Println("no credential file found, skipping tests for otc")
+		os.Exit(0)
+	}
+
 	credentialData, err := readCredentials(credentialFile)
 	if err != nil {
 		panic(fmt.Sprintf("failed to read credential file: %v", err))
