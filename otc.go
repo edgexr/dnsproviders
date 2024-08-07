@@ -116,7 +116,7 @@ func (o OTC) CreateOrUpdateDNSRecord(ctx context.Context, zone, name, rtype, con
 
 	if len(records) == 0 {
 		if err := o.createDNSRecord(ctx, zoneID, fmt.Sprintf("%s.%s", name, zone), rtype, content, ttl, proxy); err != nil {
-			return fmt.Errorf("failed to create record in  zoneID '%s' (zone name '%s') with name %s: %v", zoneID, zone, name, err)
+			return fmt.Errorf("failed to create record in zoneID '%s' (zone name '%s') with name %s: %v", zoneID, zone, name, err)
 		}
 
 		return nil
