@@ -23,6 +23,7 @@ const (
 	RecordTypeA     = "A"
 	RecordTypeAAAA  = "AAAA"
 	RecordTypeCNAME = "CNAME"
+	RecordTypeTXT   = "TXT"
 )
 
 // Provider common interface for managing DNS entries.

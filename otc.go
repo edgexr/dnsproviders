@@ -80,7 +80,7 @@ func (o OTC) GetDNSRecords(ctx context.Context, zone, name string) ([]api.Record
 
 	zoneID := z.ID
 
-	recordSets, err := o.listRecordSets(ctx, zoneID, name)
+	recordSets, err := o.listRecordSets(ctx, zoneID, name, "")
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (o OTC) CreateOrUpdateDNSRecord(ctx context.Context, zone, name, rtype, con
 
 	zoneID := z.ID
 
-	records, err := o.listRecordSets(ctx, zoneID, name)
+	records, err := o.listRecordSets(ctx, zoneID, name, rtype)
 	if err != nil {
 		return err
 	}
@@ -122,24 +122,25 @@ func (o OTC) CreateOrUpdateDNSRecord(ctx context.Context, zone, name, rtype, con
 		return nil
 	}
 
-	if len(records) > 1 {
-		return fmt.Errorf("found more than one matching DNS record with name %s in zone %s", name, zone)
+	record := records[0]
+
+	// no change
+	if record.TTL == ttl && record.Records[0] == strings.Trim(content, "\"") {
+		return nil
 	}
 
-	recordID := records[0].ID
-
 	// wrap content in quotation marks, if not already quoted
-	if !strings.HasPrefix(content, "\"") && !strings.HasSuffix(content, "\"") {
+	if rtype == api.RecordTypeTXT && !strings.HasPrefix(content, "\"") && !strings.HasSuffix(content, "\"") {
 		content = fmt.Sprintf("\"%s\"", content)
 	}
 
-	result := recordsets.Update(o.dns, zoneID, recordID, recordsets.UpdateOpts{
+	result := recordsets.Update(o.dns, zoneID, record.ID, recordsets.UpdateOpts{
 		TTL:     ttl,
 		Records: []string{content},
 	})
 
 	if result.Err != nil {
-		return fmt.Errorf("failed to update record for zone %s (name='%s'): %v", zone, name, err)
+		return fmt.Errorf("failed to update record for zone %s (name='%s'): %v", zone, name, result.Err)
 	}
 
 	return nil
@@ -153,7 +154,7 @@ func (o OTC) DeleteDNSRecord(ctx context.Context, zone, name string) error {
 
 	zoneID := z.ID
 
-	records, err := o.listRecordSets(ctx, zoneID, name)
+	records, err := o.listRecordSets(ctx, zoneID, name, "")
 	if err != nil {
 		return fmt.Errorf("failed to list record sets by zoneID '%s' (zone name '%s'): %v", zoneID, zone, err)
 	}
@@ -162,13 +163,13 @@ func (o OTC) DeleteDNSRecord(ctx context.Context, zone, name string) error {
 		return ErrRecordNotFound
 	}
 
-	if len(records) > 1 {
-		return fmt.Errorf("found more than one matching DNS record with name %s in zone %s", name, zone)
+	for _, record := range records {
+		if err := recordsets.Delete(o.dns, zoneID, record.ID).Err; err != nil {
+			return fmt.Errorf("failed to delete record with ID %s: %v", record.ID, err)
+		}
 	}
 
-	recordID := records[0].ID
-
-	return recordsets.Delete(o.dns, zoneID, recordID).Err
+	return nil
 }
 
 func (o OTC) findZoneByName(_ context.Context, name string) (*zones.Zone, error) {
@@ -193,9 +194,10 @@ func (o OTC) findZoneByName(_ context.Context, name string) (*zones.Zone, error)
 	return nil, ErrZoneNotFound
 }
 
-func (o OTC) listRecordSets(_ context.Context, zoneID, name string) ([]recordsets.RecordSet, error) {
+func (o OTC) listRecordSets(_ context.Context, zoneID, name, rtype string) ([]recordsets.RecordSet, error) {
 	pages := recordsets.ListByZone(o.dns, zoneID, recordsets.ListOpts{
 		Name: name,
+		Type: rtype,
 	})
 
 	page, err := pages.AllPages()
@@ -223,7 +225,7 @@ func (o OTC) listRecordSets(_ context.Context, zoneID, name string) ([]recordset
 }
 
 func (o OTC) createDNSRecord(_ context.Context, zoneID, fqdn, rtype, content string, ttl int, _ bool) error {
-	if !strings.HasPrefix(content, "\"") && !strings.HasSuffix(content, "\"") {
+	if rtype == "TXT" && !strings.HasPrefix(content, "\"") && !strings.HasSuffix(content, "\"") {
 		content = fmt.Sprintf("\"%s\"", content)
 	}
 

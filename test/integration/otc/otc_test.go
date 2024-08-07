@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strings"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/edgexr/dnsproviders"
+	"github.com/edgexr/dnsproviders/api"
 )
 
 const (
@@ -22,10 +24,12 @@ const (
 )
 
 var (
-	provider          *dnsproviders.OTC
-	testZone          = ""
-	testRecordName    = fmt.Sprintf("test-%s", strings.Split(uuid.NewString(), "-")[0])
-	testRecordContent = uuid.NewString()
+	provider       *dnsproviders.OTC
+	testZone       = "filled-with-data-from-config.json"
+	testRecordName = fmt.Sprintf("test-%s", strings.Split(uuid.NewString(), "-")[0])
+	ipv4           = "80.0.0.0"
+	ipv4Alt        = "80.0.0.1"
+	ipv6           = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
 )
 
 func TestMain(m *testing.M) {
@@ -54,12 +58,28 @@ func TestMain(m *testing.M) {
 func TestCreateRecord(t *testing.T) {
 	type testCase struct {
 		Zone          string
+		Type          string
+		Content       string
 		ExpectedError error
 	}
 
 	for name, tc := range map[string]testCase{
-		"no error": {
+		"no error create a-record": {
 			Zone:          testZone,
+			Type:          api.RecordTypeA,
+			Content:       ipv4Alt,
+			ExpectedError: nil,
+		},
+		"no error create aaaa-record": {
+			Zone:          testZone,
+			Type:          api.RecordTypeAAAA,
+			Content:       ipv6,
+			ExpectedError: nil,
+		},
+		"no error update a-record": {
+			Zone:          testZone,
+			Type:          api.RecordTypeA,
+			Content:       ipv4,
 			ExpectedError: nil,
 		},
 		"invalid zone": {
@@ -68,7 +88,7 @@ func TestCreateRecord(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			err := provider.CreateOrUpdateDNSRecord(context.Background(), tc.Zone, testRecordName, "TXT", testRecordContent, 300, false)
+			err := provider.CreateOrUpdateDNSRecord(context.Background(), tc.Zone, testRecordName, tc.Type, tc.Content, 300, false)
 
 			if tc.ExpectedError == nil {
 				require.NoError(t, err)
@@ -86,13 +106,22 @@ func TestGetRecord(t *testing.T) {
 	records, err := provider.GetDNSRecords(context.Background(), testZone, testRecordName)
 	require.NoError(t, err)
 
-	require.Equal(t, 1, len(records))
+	require.Equal(t, 2, len(records))
 
-	record := records[0]
-	assert.Equal(t, testRecordName, record.Name)
-	assert.Equal(t, "TXT", record.Type)
-	assert.Equal(t, 300, record.TTL)
-	assert.Equal(t, testRecordContent, record.Content[0])
+	// make sure A-Record comes before AAAA-Record
+	sort.Slice(records, func(i, j int) bool {
+		return len(records[i].Type) < len(records[j].Type)
+	})
+
+	assert.Equal(t, testRecordName, records[0].Name)
+	assert.Equal(t, api.RecordTypeA, records[0].Type)
+	assert.Equal(t, 300, records[0].TTL)
+	assert.Equal(t, ipv4, records[0].Content[0])
+
+	assert.Equal(t, testRecordName, records[1].Name)
+	assert.Equal(t, api.RecordTypeAAAA, records[1].Type)
+	assert.Equal(t, 300, records[1].TTL)
+	assert.Equal(t, ipv6, records[1].Content[0])
 }
 
 func TestDeleteRecord(t *testing.T) {
