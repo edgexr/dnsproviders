@@ -1,0 +1,4 @@
+*.DS_Store
+*.idea
+
+/test/integration/*/config.json

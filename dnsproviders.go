@@ -32,6 +32,8 @@ func GetProvider(ctx context.Context, typ api.ProviderType, zone string, credent
 		return NewCloudflareProvider(ctx, zone, credentialsData, logger)
 	case api.GoogleCloudDNSProvider:
 		return NewGoogleCloudDNSProvider(ctx, zone, credentialsData, logger)
+	case api.OpenTelekomCloudProvider:
+		return NewOtcProvider(ctx, zone, credentialsData, logger)
 	}
 	return nil, errors.New("unknown dns provider " + string(typ))
 }
