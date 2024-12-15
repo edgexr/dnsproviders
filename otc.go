@@ -37,7 +37,7 @@ var (
 	ErrRecordNotFound = errors.New("could not find record by the given name")
 )
 
-func NewOtcProvider(_ context.Context, _ string, credentialsData map[string]string, logger api.Logger) (*OTC, error) {
+func NewOtcProvider(_ context.Context, _ string, credentialsData map[string]string, logger api.Logger, ops ...Option) (*OTC, error) {
 	for _, key := range []string{CredentialKeyRegion, CredentialKeyDomainName, CredentialKeyTenantName, CredentialKeyUsername, CredentialKeyPassword} {
 		if _, isSet := credentialsData[key]; !isSet {
 			return nil, fmt.Errorf("missing key %s is credentialData", key)
@@ -51,6 +51,10 @@ func NewOtcProvider(_ context.Context, _ string, credentialsData map[string]stri
 		Username:         credentialsData[CredentialKeyUsername],
 		Password:         credentialsData[CredentialKeyPassword],
 	})
+	opts := getOptions(ops...)
+	if opts.client != nil {
+		client.HTTPClient = *opts.client
+	}
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize authenticated client: %v", err)

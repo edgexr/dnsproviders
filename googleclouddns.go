@@ -39,7 +39,7 @@ type CloudDNS struct {
 }
 
 // NewGoogleCloudDNS creates a new Google Cloud DNS provider
-func NewGoogleCloudDNSProvider(ctx context.Context, zone string, credentialsData map[string]string, logger api.Logger) (*CloudDNS, error) {
+func NewGoogleCloudDNSProvider(ctx context.Context, zone string, credentialsData map[string]string, logger api.Logger, ops ...Option) (*CloudDNS, error) {
 	project, ok := credentialsData[projectID]
 	if !ok {
 		return nil, fmt.Errorf("google cloud DNS credentials missing " + projectID)
@@ -48,8 +48,17 @@ func NewGoogleCloudDNSProvider(ctx context.Context, zone string, credentialsData
 	if err != nil {
 		return nil, err
 	}
+	apiOptions := []option.ClientOption{
+		option.WithCredentialsJSON(jsonData),
+	}
+
+	opts := getOptions()
+	if opts.client != nil {
+		apiOptions = append(apiOptions, option.WithHTTPClient(opts.client))
+	}
+
 	logger.InfoContext(ctx, "initializing google cloud DNS", "project", project)
-	api, err := dns.NewService(ctx, option.WithCredentialsJSON(jsonData))
+	api, err := dns.NewService(ctx, apiOptions...)
 	if err != nil {
 		return nil, err
 	}
