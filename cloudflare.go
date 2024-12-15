@@ -31,12 +31,17 @@ type CloudflareAPI struct {
 }
 
 // NewCloudflareProvider creates a new Cloudflare DNS provider.
-func NewCloudflareProvider(ctx context.Context, zone string, credentialsData map[string]string, logger api.Logger) (*CloudflareAPI, error) {
+func NewCloudflareProvider(ctx context.Context, zone string, credentialsData map[string]string, logger api.Logger, ops ...Option) (*CloudflareAPI, error) {
 	token, ok := credentialsData["token"]
 	if !ok {
 		return nil, fmt.Errorf("missing token key from cloudflare dns provider credentials data")
 	}
-	api, err := cloudflare.NewWithAPIToken(token)
+	opts := getOptions()
+	apiOptions := []cloudflare.Option{}
+	if opts.client != nil {
+		apiOptions = append(apiOptions, cloudflare.HTTPClient(opts.client))
+	}
+	api, err := cloudflare.NewWithAPIToken(token, apiOptions...)
 	if err != nil {
 		return nil, err
 	}
