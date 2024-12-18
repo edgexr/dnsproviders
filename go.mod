@@ -1,12 +1,14 @@
 module github.com/edgexr/dnsproviders
 
-go 1.21
+go 1.22
+
+toolchain go1.22.9
 
 require (
 	github.com/cloudflare/cloudflare-go v0.13.4
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/google/uuid v1.4.0 // indirect
+	github.com/google/uuid v1.4.0
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/crypto v0.21.0 // indirect
@@ -17,6 +19,8 @@ require (
 	google.golang.org/grpc v1.61.0 // indirect
 )
 
+require github.com/opentelekomcloud/gophertelekomcloud v0.9.3
+
 require (
 	cloud.google.com/go/compute v1.23.3 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
@@ -25,7 +29,6 @@ require (
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.12.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
-	github.com/opentelekomcloud/gophertelekomcloud v0.9.3 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	go.opencensus.io v0.24.0 // indirect

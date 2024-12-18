@@ -36,7 +36,7 @@ func NewCloudflareProvider(ctx context.Context, zone string, credentialsData map
 	if !ok {
 		return nil, fmt.Errorf("missing token key from cloudflare dns provider credentials data")
 	}
-	opts := getOptions()
+	opts := getOptions(ops)
 	apiOptions := []cloudflare.Option{}
 	if opts.client != nil {
 		apiOptions = append(apiOptions, cloudflare.HTTPClient(opts.client))
