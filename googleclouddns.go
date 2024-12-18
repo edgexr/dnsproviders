@@ -52,7 +52,7 @@ func NewGoogleCloudDNSProvider(ctx context.Context, zone string, credentialsData
 		option.WithCredentialsJSON(jsonData),
 	}
 
-	opts := getOptions()
+	opts := getOptions(ops)
 	if opts.client != nil {
 		apiOptions = append(apiOptions, option.WithHTTPClient(opts.client))
 	}

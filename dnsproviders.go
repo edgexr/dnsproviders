@@ -51,7 +51,7 @@ func WithHTTPClient(client *http.Client) Option {
 	}
 }
 
-func getOptions(ops ...Option) options {
+func getOptions(ops []Option) options {
 	opts := options{}
 	for _, op := range ops {
 		op(&opts)

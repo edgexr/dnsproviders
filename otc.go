@@ -51,7 +51,7 @@ func NewOtcProvider(_ context.Context, _ string, credentialsData map[string]stri
 		Username:         credentialsData[CredentialKeyUsername],
 		Password:         credentialsData[CredentialKeyPassword],
 	})
-	opts := getOptions(ops...)
+	opts := getOptions(ops)
 	if opts.client != nil {
 		client.HTTPClient = *opts.client
 	}
